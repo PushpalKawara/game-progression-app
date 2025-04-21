@@ -7,8 +7,8 @@ import datetime
 import re
 
 # Dummy username & password
-USERNAME = "Dummy_username"
-PASSWORD = "mysecurepassword"
+USERNAME = "Pushpal@2025"
+PASSWORD = "Pushpal@202512345"
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
