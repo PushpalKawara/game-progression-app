@@ -1,54 +1,101 @@
-# 🎮 Game Progression Analytics Dashboard
+# 🎮 Game Analytics Dashboard – Level Drop-Off & Retention Analyzer
 
-A Streamlit app to visualize and analyze game level performance using drop rates and retention rates. This tool helps game analysts and developers identify bottlenecks and improve player engagement.
+> 🚀 A personal project by [Pushpal Kawara](mailto:pushpalkawara21@gmail.com)  
+> 🔒 *All rights reserved. Use only with permission.*
 
-## 📊 Features
+---
 
-- 📁 Upload Excel file with game level data
-- 🔍 Auto-calculates:
-  - Drop Rate (per level)
-  - Retention Rate (from Level 2 onwards)
-- 📈 Visualizes:
-  - Drop Rate Bar Chart
-  - Retention Rate Line Chart
-- 📥 Downloads updated Excel with new columns
+## 📌 Overview
 
-## 🧠 Ideal For
+This is a **Game Analytics tool** that provides insights into player behavior across game levels – particularly focusing on **drop-off points** and **retention trends**.
 
-- Game Analysts
-- Game Designers
-- QA Testers
-- Product Managers
+The tool processes raw Excel data exported from a game's backend and delivers visualized insights to help:
 
-## 📝 How to Use
+- Identify high-drop levels 🛑
+- Measure level-wise retention 🔁
+- Track user engagement across stages 📊
 
-1. Open the deployed app on Streamlit Cloud
-2. Upload your level progression Excel file
-3. Preview calculated metrics and interactive charts
-4. Download the updated report with drop & retention stats
+> Built with ❤️ using Python & Streamlit, this tool showcases my hands-on ability to extract, process, analyze, and visualize game data efficiently.
 
-## 📦 Tech Stack
+---
 
-- Python
-- Streamlit
-- Pandas
-- Matplotlib
-- Openpyxl
-- XlsxWriter
+## 📸 Screenshots
 
-## 📁 Sample Data Format
+<p align="center">
+  <img src="assets/dashboard_demo_1.png" width="600"/>
+  <br><i>Level-wise Drop Rate Chart</i>
+</p>
 
-The uploaded Excel file should contain the following columns:
+<p align="center">
+  <img src="assets/dashboard_demo_2.png" width="600"/>
+  <br><i>Retention Rate Line Graph</i>
+</p>
 
-| Environment | Stage | Users | Unique Users | % Completed | Attempts | Complete | Fails | Attempts per User | Avg Complete Time |
-|-------------|--------|--------|----------------|----------------|-----------|------------|--------|------------------------|-------------------|
+---
 
-## 🔗 Live App
+## 🧠 Why I Built This
 
-[👉 Click here to use the app](https://YOUR-STREAMLIT-URL-HERE) <!-- Replace with actual deployed link -->
+During my role as a **Game Analyst Intern**, I worked with datasets that contained:
+- Player progress (Levels)
+- User attempts, fails, and completion time
+- Engagement patterns
 
-## 🧑‍💻 Developed By
+To automate manual calculations and improve insights, I designed this tool. It made analysis faster, clearer, and more actionable.
 
-Pushpal Kawara  
-📧 pushpalkawara21@gmail.com  
-🌐 [LinkedIn](https://www.linkedin.com/in/pushpal-kawara/)
+🧩 **This is not a company-made product, but a personal project inspired by real-world problems.**
+
+---
+
+## 🛠 Tech Stack
+
+- **Python** – Core scripting & logic
+- **Pandas** – Data wrangling & Excel parsing
+- **Streamlit** – UI for dashboard
+- **Matplotlib / Plotly** – Charts and graphs
+- **Excel** – Data inputs
+
+---
+
+## 🎯 Key Features
+
+✅ Upload and auto-process Excel game logs  
+✅ Calculates drop and retention rates automatically  
+✅ Generates user-friendly charts  
+✅ Password-protected usage (secured access)  
+✅ Easy deployment via GitHub + Streamlit  
+
+---
+
+## 🔐 Access Control
+
+This tool and its source code are:
+
+- ✅ For personal use and demo only
+- 🔒 **Private & proprietary**
+- ❌ Not to be copied, deployed, or reused without written permission
+
+Please contact me for access or demo inquiries.
+
+---
+
+## 👨‍💻 About Me
+
+I’m **Pushpal Kawara**, a Computer Science Graduate (2024), passionate about:
+
+- Game Analytics
+- Data Engineering
+- Machine Learning
+- Python & SQL Automation
+
+📍 Based in Nagpur, India  
+📧 [pushpalkawara21@gmail.com](mailto:pushpalkawara21@gmail.com)  
+🔗 [LinkedIn – Pushpal Kawara](https://www.linkedin.com/in/pushpal-kawara/)
+
+---
+
+## 📎 How to Run (If Authorized)
+
+```bash
+git clone https://github.com/your-username/game-analytics-dashboard.git
+cd game-analytics-dashboard
+streamlit run app.py
