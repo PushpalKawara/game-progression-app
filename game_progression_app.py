@@ -15,7 +15,7 @@ def generate_excel(df_export, retention_fig, drop_fig, drop_comb_fig):
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         # Step 1: Remove duplicate levels from df_export
         df_export = df_export.drop_duplicates(subset='Level', keep='first').reset_index(drop=True)
-        
+
         # Write dataframe to Excel
         df_export.to_excel(writer, sheet_name='Summary', index=False)
         workbook = writer.book
@@ -51,14 +51,34 @@ def generate_excel(df_export, retention_fig, drop_fig, drop_comb_fig):
         # Apply cell format with conditional formatting
         for row_num in range(1, len(df_export) + 1):
             for col_num in range(len(df_export.columns)):
+                # value = df_export.iloc[row_num - 1, col_num]
+                # col_name = df_export.columns[col_num]
+
+                # # Check if this is a Drop column with value >= 3
+                # if col_name in ['Game Play Drop', 'Popup Drop', 'Total Level Drop'] and pd.notna(value) and value >= 3:
+                #     worksheet.write(row_num, col_num, value, highlight_format)
+                # else:
+                #     worksheet.write(row_num, col_num, value, cell_format)
+
                 value = df_export.iloc[row_num - 1, col_num]
                 col_name = df_export.columns[col_num]
 
-                # Check if this is a Drop column with value >= 3
-                if col_name in ['Game Play Drop', 'Popup Drop', 'Total Level Drop'] and pd.notna(value) and value >= 3:
-                    worksheet.write(row_num, col_num, value, highlight_format)
-                else:
-                    worksheet.write(row_num, col_num, value, cell_format)
+                # Convert all numpy types to native Python types
+                if isinstance(value, (np.generic, np.bool_)):
+                    value = value.item()
+
+                # Handle NaNs safely
+                if pd.isna(value):
+                    value = ""
+
+                try:
+                    if col_name in ['Game Play Drop', 'Popup Drop', 'Total Level Drop'] and isinstance(value, (int, float)) and value >= 3:
+                        worksheet.write(row_num, col_num, value, highlight_format)
+                    else:
+                        worksheet.write(row_num, col_num, value, cell_format)
+                except Exception as e:
+                    st.warning(f"⚠️ Could not write value at row {row_num} col {col_num}: {e}")
+
 
         # Freeze top row
         worksheet.freeze_panes(1, 0)
@@ -70,19 +90,19 @@ def generate_excel(df_export, retention_fig, drop_fig, drop_comb_fig):
 
         # Insert Retention Chart
         retention_img = BytesIO()
-        retention_fig.savefig(retention_img, format='png', dpi=300, bbox_inches='tight')
+        retention_fig.savefig(retention_img, format='png')
         retention_img.seek(0)
         worksheet.insert_image('M2', 'retention_chart.png', {'image_data': retention_img})
 
         # Insert total Drop Chart
         drop_img = BytesIO()
-        drop_fig.savefig(drop_img, format='png', dpi=300, bbox_inches='tight')
+        drop_fig.savefig(drop_img, format='png')
         drop_img.seek(0)
         worksheet.insert_image('M37', 'drop_chart.png', {'image_data': drop_img})
 
-        # Insert Combo Drop Chart
+        # Insert 'Popup Drop', 'Total Level Drop' Chart
         drop_comb_img = BytesIO()
-        drop_comb_fig.savefig(drop_comb_img, format='png', dpi=300, bbox_inches='tight')
+        drop_comb_fig.savefig(drop_comb_img, format='png')
         drop_comb_img.seek(0)
         worksheet.insert_image('M75', 'drop_comb_chart.png', {'image_data': drop_comb_img})
 
@@ -110,13 +130,13 @@ def main():
 
         if level_col_start and user_col_start:
             df_start = df_start[[level_col_start, user_col_start]]
-            
+
             def clean_level(x):
                 try:
                     return int(re.search(r"(\d+)", str(x)).group(1))
                 except:
                     return None
-                    
+
             df_start['LEVEL_CLEAN'] = df_start[level_col_start].apply(clean_level)
             df_start.dropna(inplace=True)
             df_start['LEVEL_CLEAN'] = df_start['LEVEL_CLEAN'].astype(int)
@@ -138,19 +158,13 @@ def main():
             df_complete['LEVEL_CLEAN'] = df_complete['LEVEL_CLEAN'].astype(int)
             df_complete.sort_values('LEVEL_CLEAN', inplace=True)
             df_complete.rename(columns={user_col_complete: 'Complete Users'}, inplace=True)
-            
-            # Include gameplay columns if available
-            optional_cols = ['PLAYTIME', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
-            for col in optional_cols:
-                if col in df_complete.columns:
-                    df_complete[col] = df_complete[col]
         else:
             st.error("❌ Required columns not found in complete file.")
             return
 
         # ------------ MERGE AND CALCULATE METRICS ------------- #
         df = pd.merge(df_start, df_complete, on='LEVEL_CLEAN', how='outer').sort_values('LEVEL_CLEAN')
-        
+
         # Calculate metrics
         df['Game Play Drop'] = ((df['Start Users'] - df['Complete Users']) / df['Start Users']) * 100
         df['Popup Drop'] = ((df['Complete Users'].shift(1) - df['Start Users']) / df['Complete Users'].shift(1)) * 100
@@ -161,20 +175,17 @@ def main():
         metric_cols = ['Game Play Drop', 'Popup Drop', 'Total Level Drop', 'Retention %']
         df[metric_cols] = df[metric_cols].round(2)
 
-        # ------------ CHARTS ------------ #
-        df_100 = df[df['LEVEL_CLEAN'] <= 100]
-        
-        # Custom x tick labels
-        xtick_labels = []
-        for val in np.arange(1, 101, 1):
-            if val % 5 == 0:
-                xtick_labels.append(f"$\\bf{{{val}}}$")  # Bold using LaTeX
-            else:
-                xtick_labels.append(str(val))
+        # Include gameplay columns if available
+        optional_cols = ['PLAYTIME', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
+        for col in optional_cols:
+            if col in df_complete.columns:
+                df[col] = df_complete[col]
 
         # ------------ RETENTION CHART ------------ #
         st.subheader("📈 Retention Chart (Levels 1-100)")
         retention_fig, ax = plt.subplots(figsize=(15, 7))
+        df_100 = df[df['LEVEL_CLEAN'] <= 100]
+
         ax.plot(df_100['LEVEL_CLEAN'], df_100['Retention %'],
                 linestyle='-', color='#F57C00', linewidth=2, label='RETENTION')
 
@@ -182,11 +193,23 @@ def main():
         ax.set_ylim(0, 120)
         ax.set_xticks(np.arange(1, 101, 1))
         ax.set_yticks(np.arange(0, 121, 10))
+
+        # Set labels with padding
         ax.set_xlabel("Level", labelpad=15)
         ax.set_ylabel("% Of Users", labelpad=15)
+
         ax.set_title(f"Retention Chart (Levels 1-100) | Version {version} | Date: {date_selected.strftime('%d-%m-%Y')}",
                      fontsize=12, fontweight='bold')
+
+        # Custom x tick labels
+        xtick_labels = []
+        for val in np.arange(1, 101, 1):
+            if val % 5 == 0:
+                xtick_labels.append(f"$\\bf{{{val}}}$")  # Bold using LaTeX
+            else:
+                xtick_labels.append(str(val))
         ax.set_xticklabels(xtick_labels, fontsize=6)
+
         ax.tick_params(axis='x', labelsize=6)
         ax.grid(True, linestyle='--', linewidth=0.5)
 
@@ -199,7 +222,7 @@ def main():
         st.pyplot(retention_fig)
 
         # ------------ TOTAL DROP CHART ------------ #
-        st.subheader("📉 Game Play Drop Chart (Levels 1-100)")
+        st.subheader("📉 Total Drop Chart (Levels 1-100)")
         drop_fig, ax2 = plt.subplots(figsize=(15, 6))
         bars = ax2.bar(df_100['LEVEL_CLEAN'], df_100['Game Play Drop'], color='#EF5350', label='DROP RATE')
 
@@ -208,9 +231,11 @@ def main():
         ax2.set_xticks(np.arange(1, 101, 1))
         ax2.set_yticks(np.arange(0, max(df_100['Game Play Drop'].max(), 10) + 11, 5))
         ax2.set_xlabel("Level")
-        ax2.set_ylabel("% Of Users Dropped")
+        ax2.set_ylabel("% Of Users Drop")
         ax2.set_title(f"Game Play Drop Chart | Version {version} | Date: {date_selected.strftime('%d-%m-%Y')}",
                       fontsize=12, fontweight='bold')
+
+        # Custom x tick labels
         ax2.set_xticklabels(xtick_labels, fontsize=6)
         ax2.tick_params(axis='x', labelsize=6)
         ax2.grid(True, linestyle='--', linewidth=0.5)
@@ -228,12 +253,12 @@ def main():
         # ------------ COMBO DROP CHART ------------ #
         st.subheader("📉 Combo Drop Chart (Levels 1-100)")
         drop_comb_fig, ax3 = plt.subplots(figsize=(15, 6))
-        
+
         # Plot both drop types
-        width = 0.35
+        width = 0.4
         x = df_100['LEVEL_CLEAN']
+        ax3.bar(x + width/2, df_100['Game Play Drop'], width, color='#66BB6A', label='Game Play Drop')
         ax3.bar(x - width/2, df_100['Popup Drop'], width, color='#42A5F5', label='Popup Drop')
-        ax3.bar(x + width/2, df_100['Total Level Drop'], width, color='#66BB6A', label='Total Level Drop')
 
         ax3.set_xlim(1, 100)
         max_drop = max(df_100['Popup Drop'].max(), df_100['Total Level Drop'].max())
@@ -242,8 +267,10 @@ def main():
         ax3.set_yticks(np.arange(0, max(max_drop, 10) + 11, 5))
         ax3.set_xlabel("Level")
         ax3.set_ylabel("% Of Users Dropped")
-        ax3.set_title(f"Popup & Total Level Drop Chart | Version {version} | Date: {date_selected.strftime('%d-%m-%Y')}",
+        ax3.set_title(f"Game Play  & Popup DropDrop Chart | Version {version} | Date: {date_selected.strftime('%d-%m-%Y')}",
                       fontsize=12, fontweight='bold')
+
+        # Custom x tick labels
         ax3.set_xticklabels(xtick_labels, fontsize=6)
         ax3.tick_params(axis='x', labelsize=6)
         ax3.grid(True, linestyle='--', linewidth=0.5)
@@ -253,18 +280,18 @@ def main():
 
         # ------------ DOWNLOAD SECTION ------------ #
         st.subheader("⬇️ Download Excel Report")
-        
+
         # Prepare export dataframe
         df_export = df[['LEVEL_CLEAN', 'Start Users', 'Complete Users',
                         'Game Play Drop', 'Popup Drop', 'Total Level Drop',
-                        'Retention %'] + [col for col in optional_cols if col in df.columns]]
+                        'Retention %'] + [col for col in optional_cols if col in df_complete.columns]]
         df_export = df_export.rename(columns={'LEVEL_CLEAN': 'Level'})
-        
+
         st.dataframe(df_export)
 
         # Generate and download Excel
         excel_data = generate_excel(df_export, retention_fig, drop_fig, drop_comb_fig)
-        
+
         st.download_button(
             label="📥 Download Excel Report",
             data=excel_data,
