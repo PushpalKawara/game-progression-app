@@ -200,8 +200,8 @@ def main():
         df[metric_cols] = df[metric_cols].round(2)
 
         # Include gameplay columns if available
-        optional_cols = ['PLAYTIME', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
-        for col in optional_cols:
+        df_complete = ['PLAYTIME', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
+        for col in df_complete:
             if col in df_complete.columns:
                 df[col] = df_complete[col]
 
@@ -308,7 +308,7 @@ def main():
         # Prepare export dataframe
         df_export = df[['LEVEL_CLEAN', 'Start Users', 'Complete Users',
                         'Game Play Drop', 'Popup Drop', 'Total Level Drop',
-                        'Retention %'] + [col for col in optional_cols if col in optional_cols.columns]]
+                        'Retention %'] + [col for col in df_complete if col in df_complete.columns]]
         df_export = df_export.rename(columns={'LEVEL_CLEAN': 'Level'})
 
         st.dataframe(df_export)
