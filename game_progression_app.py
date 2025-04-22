@@ -175,13 +175,16 @@ def main():
         level_col_complete = next((col for col in df_complete.columns if col in level_columns), None)
         user_col_complete = next((col for col in df_complete.columns if 'USER' in col), None)
 
-        if level_col_complete and user_col_complete:
+        if level_col_complete and user_col_complete :
             df_complete = df_complete[[level_col_complete, user_col_complete]]
             df_complete['LEVEL_CLEAN'] = df_complete[level_col_complete].apply(clean_level)
             df_complete.dropna(inplace=True)
             df_complete['LEVEL_CLEAN'] = df_complete['LEVEL_CLEAN'].astype(int)
             df_complete.sort_values('LEVEL_CLEAN', inplace=True)
             df_complete.rename(columns={user_col_complete: 'Complete Users'}, inplace=True)
+            df_complete=  df_complete['PLAYTIME', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
+
+
         else:
             st.error("❌ Required columns not found in complete file.")
             return
@@ -199,11 +202,11 @@ def main():
         metric_cols = ['Game Play Drop', 'Popup Drop', 'Total Level Drop', 'Retention %']
         df[metric_cols] = df[metric_cols].round(2)
 
-        # Include gameplay columns if available
-        df_complete = ['PLAYTIME', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
-        for col in df_complete:
-            if col in df_complete.columns:
-                df[col] = df_complete[col]
+        # # Include gameplay columns if available
+        # df_complete = ['PLAYTIME', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
+        # for col in df_complete:
+        #     if col in df_complete.columns:
+        #         df[col] = df_complete[col]
 
         # ------------ RETENTION CHART ------------ #
         st.subheader("📈 Retention Chart (Levels 1-100)")
@@ -305,10 +308,14 @@ def main():
         # ------------ DOWNLOAD SECTION ------------ #
         st.subheader("⬇️ Download Excel Report")
 
-        # Prepare export dataframe
+        # # Prepare export dataframe
+        # df_export = df[['LEVEL_CLEAN', 'Start Users', 'Complete Users',
+        #                 'Game Play Drop', 'Popup Drop', 'Total Level Drop',
+        #                 'Retention %'] + [col for col in df_complete if col in df_complete.columns]]
         df_export = df[['LEVEL_CLEAN', 'Start Users', 'Complete Users',
                         'Game Play Drop', 'Popup Drop', 'Total Level Drop',
-                        'Retention %'] + [col for col in df_complete if col in df_complete.columns]]
+                        'Retention %',  'PLAYTIME', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']]
+
         df_export = df_export.rename(columns={'LEVEL_CLEAN': 'Level'})
 
         st.dataframe(df_export)
