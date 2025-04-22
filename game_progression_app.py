@@ -308,7 +308,7 @@ def main():
         # Prepare export dataframe
         df_export = df[['LEVEL_CLEAN', 'Start Users', 'Complete Users',
                         'Game Play Drop', 'Popup Drop', 'Total Level Drop',
-                        'Retention %'] + [col for col in optional_cols if col in df.columns]]
+                        'Retention %'] + [col for col in optional_cols if col in optional_cols.columns]]
         df_export = df_export.rename(columns={'LEVEL_CLEAN': 'Level'})
 
         st.dataframe(df_export)
