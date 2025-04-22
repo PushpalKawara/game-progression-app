@@ -6,6 +6,30 @@ from io import BytesIO
 import datetime
 import re
 
+# Dummy username & password
+USERNAME = "Pushpal@2025"
+PASSWORD = "Pushpal@202512345"
+
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+
+if not st.session_state.logged_in:
+    with st.form("login"):
+        st.subheader("🔐 Login Required")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        login = st.form_submit_button("Login")
+
+        if login:
+            if username == USERNAME and password == PASSWORD:
+                st.session_state.logged_in = True
+                st.success("Logged in successfully!")
+            else:
+                st.error("Incorrect credentials")
+    st.stop()
+
+
+
 st.set_page_config(page_title="GAME PROGRESSION", layout="wide")
 st.title("📊 GAME PROGRESSION Dashboard")
 
@@ -104,7 +128,7 @@ def generate_excel(df_export, retention_fig, drop_fig, drop_comb_fig):
         drop_comb_img = BytesIO()
         drop_comb_fig.savefig(drop_comb_img, format='png')
         drop_comb_img.seek(0)
-        worksheet.insert_image('M75', 'drop_comb_chart.png', {'image_data': drop_comb_img})
+        worksheet.insert_image('M67', 'drop_comb_chart.png', {'image_data': drop_comb_img})
 
     output.seek(0)
     return output
@@ -190,9 +214,9 @@ def main():
                 linestyle='-', color='#F57C00', linewidth=2, label='RETENTION')
 
         ax.set_xlim(1, 100)
-        ax.set_ylim(0, 120)
+        ax.set_ylim(0, 110)
         ax.set_xticks(np.arange(1, 101, 1))
-        ax.set_yticks(np.arange(0, 121, 10))
+        ax.set_yticks(np.arange(0, 110, 5))
 
         # Set labels with padding
         ax.set_xlabel("Level", labelpad=15)
@@ -224,15 +248,15 @@ def main():
         # ------------ TOTAL DROP CHART ------------ #
         st.subheader("📉 Total Drop Chart (Levels 1-100)")
         drop_fig, ax2 = plt.subplots(figsize=(15, 6))
-        bars = ax2.bar(df_100['LEVEL_CLEAN'], df_100['Game Play Drop'], color='#EF5350', label='DROP RATE')
+        bars = ax2.bar(df_100['LEVEL_CLEAN'], df_100['Total Level Drop'], color='#EF5350', label='DROP RATE')
 
         ax2.set_xlim(1, 100)
-        ax2.set_ylim(0, max(df_100['Game Play Drop'].max(), 10) + 10)
+        ax2.set_ylim(0, max(df_100['Total Level Drop'].max(), 10) + 10)
         ax2.set_xticks(np.arange(1, 101, 1))
-        ax2.set_yticks(np.arange(0, max(df_100['Game Play Drop'].max(), 10) + 11, 5))
+        ax2.set_yticks(np.arange(0, max(df_100['Total Level Drop'].max(), 10) + 11, 5))
         ax2.set_xlabel("Level")
         ax2.set_ylabel("% Of Users Drop")
-        ax2.set_title(f"Game Play Drop Chart | Version {version} | Date: {date_selected.strftime('%d-%m-%Y')}",
+        ax2.set_title(f"Total Level Drop Chart | Version {version} | Date: {date_selected.strftime('%d-%m-%Y')}",
                       fontsize=12, fontweight='bold')
 
         # Custom x tick labels
@@ -261,13 +285,13 @@ def main():
         ax3.bar(x - width/2, df_100['Popup Drop'], width, color='#42A5F5', label='Popup Drop')
 
         ax3.set_xlim(1, 100)
-        max_drop = max(df_100['Popup Drop'].max(), df_100['Total Level Drop'].max())
+        max_drop = max(df_100['Game Play Drop'].max(), df_100['Popup Drop'].max())
         ax3.set_ylim(0, max(max_drop, 10) + 10)
         ax3.set_xticks(np.arange(1, 101, 1))
         ax3.set_yticks(np.arange(0, max(max_drop, 10) + 11, 5))
         ax3.set_xlabel("Level")
         ax3.set_ylabel("% Of Users Dropped")
-        ax3.set_title(f"Game Play  & Popup DropDrop Chart | Version {version} | Date: {date_selected.strftime('%d-%m-%Y')}",
+        ax3.set_title(f"Game Play  & Popup Drop Chart | Version {version} | Date: {date_selected.strftime('%d-%m-%Y')}",
                       fontsize=12, fontweight='bold')
 
         # Custom x tick labels
@@ -284,7 +308,7 @@ def main():
         # Prepare export dataframe
         df_export = df[['LEVEL_CLEAN', 'Start Users', 'Complete Users',
                         'Game Play Drop', 'Popup Drop', 'Total Level Drop',
-                        'Retention %'] + [col for col in optional_cols if col in df_complete.columns]]
+                        'Retention %'] + [col for col in optional_cols if col in df.columns]]
         df_export = df_export.rename(columns={'LEVEL_CLEAN': 'Level'})
 
         st.dataframe(df_export)
