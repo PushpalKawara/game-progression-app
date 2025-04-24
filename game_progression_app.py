@@ -166,8 +166,10 @@ def main():
         # Get all additional columns we want to include
         additional_columns = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM', 'ATTEMPT_SUM']
 
+
         available_additional_cols = [col for col in additional_columns if col in df_complete.columns]
-        df[available_additional_cols] = df[available_additional_cols].round(2)
+        df_complete[additional_columns] = df_complete[additional_columns].round(2)
+
 
 
         if level_col_complete and user_col_complete:
