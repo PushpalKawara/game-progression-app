@@ -191,13 +191,28 @@ def main():
         df[metric_cols] = df[metric_cols].round(2)
 
 
+        # optional_cols = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
+        # insert_at = df.columns.get_loc('Retention %') + 1  # Find position after 'Retention %'
+
+        # for col in optional_cols:
+        #     if col in df_complete.columns:
+        #         df.insert(insert_at, col, df_complete[col])
+        #         insert_at += 1  # Adjust position for next insert
         optional_cols = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
         insert_at = df.columns.get_loc('Retention %') + 1  # Find position after 'Retention %'
 
+        # Debugging: Print out the columns in both dataframes
+        print("Columns in df:", df.columns)
+        print("Columns in df_complete:", df_complete.columns)
+
         for col in optional_cols:
             if col in df_complete.columns:
+                print(f"Inserting column {col} at position {insert_at}")
                 df.insert(insert_at, col, df_complete[col])
                 insert_at += 1  # Adjust position for next insert
+            else:
+                print(f"Column {col} not found in df_complete!")
+
 
         # ------------ CHARTS ------------ #
         df_100 = df[df['LEVEL_CLEAN'] <= 100]
@@ -314,6 +329,7 @@ def main():
         df_export = df[['LEVEL_CLEAN', 'Start Users', 'Complete Users',
                         'Game Play Drop', 'Popup Drop', 'Total Level Drop',
                         'Retention %'] + [col for col in optional_cols if col in df.columns]]
+
         df_export = df_export.rename(columns={'LEVEL_CLEAN': 'Level'})
 
         st.dataframe(df_export)
