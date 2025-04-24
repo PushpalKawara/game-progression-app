@@ -190,60 +190,45 @@ def main():
         metric_cols = ['Game Play Drop', 'Popup Drop', 'Total Level Drop', 'Retention %']
         df[metric_cols] = df[metric_cols].round(2)
 
+        # Add additional metrics from df_complete
+        required_columns = ['PLAYTIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM']
+        missing_cols = [col for col in required_columns if col not in df_complete.columns]
 
+        if missing_cols:
+            st.warning(f"⚠️ The following columns are missing in df_complete: {missing_cols}")
+        else:
+            # Sort and reset index to align with df
+            df_complete_sorted = df_complete.sort_values('LEVEL_CLEAN').reset_index(drop=True)
+
+            # Add metrics to df
+            df['Playtime Time Avg'] = df_complete_sorted['PLAYTIME_AVG'].round(2)
+            df['Hint Used sum'] = df_complete_sorted['HINT_USED_SUM']
+            df['RETRY_COUNT_SUM'] = df_complete_sorted['RETRY_COUNT_SUM'].round(2)
+
+
+
+        # # Standardize and clean up column names in df_complete
+        # df_complete.columns = df_complete.columns.str.strip().str.upper()
+
+        # # Clean and prepare the optional columns list
         # optional_cols = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
-        # insert_at = df.columns.get_loc('Retention %') + 1  # Find position after 'Retention %'
+        # optional_cols = [col.strip().upper() for col in optional_cols]
 
-        # # Show column names in the app for debugging
-        # st.write("🔍 Columns in df:", df.columns.tolist())
-        # st.write("🔍 Columns in df_complete:", df_complete.columns.tolist())
+        # # Build a mapping from uppercase names to original names (for correct referencing)
+        # original_col_map = {col.upper(): col for col in df_complete.columns}
 
+        # # Find insert position (after 'Retention %')
+        # insert_at = df.columns.get_loc('Retention %') + 1
+
+        # # Insert available optional columns into df
         # for col in optional_cols:
-        #     if col in df_complete.columns:
-        #         st.write(f"✅ Inserting column `{col}` at position {insert_at}")
-        #         df.insert(insert_at, col, df_complete[col])
+        #     if col in original_col_map:
+        #         original_col_name = original_col_map[col]
+        #         st.write(f"✅ Inserting column `{original_col_name}` at position {insert_at}")
+        #         df.insert(insert_at, original_col_name, df_complete[original_col_name])
         #         insert_at += 1
         #     else:
         #         st.warning(f"⚠️ Column `{col}` not found in df_complete!")
-        # Keep a mapping of upper-case to original column names
-
-
-
-
-        # col_map = {col.upper(): col for col in df_complete.columns}
-
-        # for col in optional_cols:
-        #     if col in col_map:
-        #         original_col = col_map[col]
-        #         df.insert(insert_at, original_col, df_complete[original_col])
-        #         insert_at += 1
-        #     else:
-        #         st.warning(f"⚠️ Column `{col}` not found in df_complete!")
-
-
-
-        # Standardize and clean up column names in df_complete
-        df_complete.columns = df_complete.columns.str.strip().str.upper()
-
-        # Clean and prepare the optional columns list
-        optional_cols = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
-        optional_cols = [col.strip().upper() for col in optional_cols]
-
-        # Build a mapping from uppercase names to original names (for correct referencing)
-        original_col_map = {col.upper(): col for col in df_complete.columns}
-
-        # Find insert position (after 'Retention %')
-        insert_at = df.columns.get_loc('Retention %') + 1
-
-        # Insert available optional columns into df
-        for col in optional_cols:
-            if col in original_col_map:
-                original_col_name = original_col_map[col]
-                st.write(f"✅ Inserting column `{original_col_name}` at position {insert_at}")
-                df.insert(insert_at, original_col_name, df_complete[original_col_name])
-                insert_at += 1
-            else:
-                st.warning(f"⚠️ Column `{col}` not found in df_complete!")
 
 
 
@@ -362,7 +347,7 @@ def main():
         # Prepare export dataframe
         df_export = df[['LEVEL_CLEAN', 'Start Users', 'Complete Users',
                         'Game Play Drop', 'Popup Drop', 'Total Level Drop',
-                        'Retention %'] + [col for col in optional_cols if col in df.columns]]
+                        'Retention %'] + [col for col in required_columns if col in df.columns]]
 
         df_export = df_export.rename(columns={'LEVEL_CLEAN': 'Level'})
 
