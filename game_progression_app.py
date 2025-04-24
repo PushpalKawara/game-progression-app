@@ -173,8 +173,34 @@ def main():
             df_complete.sort_values('LEVEL_CLEAN', inplace=True)
             df_complete.rename(columns={user_col_complete: 'Complete Users'}, inplace=True)
 
-        else:
-            st.error("❌ Required columns not found in complete file.")
+
+
+        # Standardize and clean up column names in df_complete
+        df_complete.columns = df_complete.columns.str.strip().str.upper()
+
+        # Clean and prepare the optional columns list
+        optional_cols = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
+        optional_cols = [col.strip().upper() for col in optional_cols]
+
+        # Build a mapping from uppercase names to original names (for correct referencing)
+        original_col_map = {col.upper(): col for col in df_complete.columns}
+
+        # Find insert position (after 'Retention %')
+        insert_at = df.columns.get_loc('Retention %') + 1
+
+        # Insert available optional columns into df
+        for col in optional_cols:
+            if col in original_col_map:
+                original_col_name = original_col_map[col]
+                st.write(f"✅ Inserting column `{original_col_name}` at position {insert_at}")
+                df.insert(insert_at, original_col_name, df_complete[original_col_name])
+                insert_at += 1
+            else:
+                st.warning(f"⚠️ Column `{col}` not found in df_complete!")
+
+
+        # else:
+        #     st.error("❌ Required columns not found in complete file.")
             return
 
         # ------------ MERGE AND CALCULATE METRICS ------------- #
@@ -191,20 +217,34 @@ def main():
         df[metric_cols] = df[metric_cols].round(2)
 
 
-        optional_cols = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
-        insert_at = df.columns.get_loc('Retention %') + 1  # Find position after 'Retention %'
+        # optional_cols = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
+        # insert_at = df.columns.get_loc('Retention %') + 1  # Find position after 'Retention %'
 
-        # Show column names in the app for debugging
-        st.write("🔍 Columns in df:", df.columns.tolist())
-        st.write("🔍 Columns in df_complete:", df_complete.columns.tolist())
+        # # Show column names in the app for debugging
+        # st.write("🔍 Columns in df:", df.columns.tolist())
+        # st.write("🔍 Columns in df_complete:", df_complete.columns.tolist())
 
-        for col in optional_cols:
-            if col in df_complete.columns:
-                st.write(f"✅ Inserting column `{col}` at position {insert_at}")
-                df.insert(insert_at, col, df_complete[col])
-                insert_at += 1
-            else:
-                st.warning(f"⚠️ Column `{col}` not found in df_complete!")
+        # for col in optional_cols:
+        #     if col in df_complete.columns:
+        #         st.write(f"✅ Inserting column `{col}` at position {insert_at}")
+        #         df.insert(insert_at, col, df_complete[col])
+        #         insert_at += 1
+        #     else:
+        #         st.warning(f"⚠️ Column `{col}` not found in df_complete!")
+        # Keep a mapping of upper-case to original column names
+
+
+
+
+        # col_map = {col.upper(): col for col in df_complete.columns}
+
+        # for col in optional_cols:
+        #     if col in col_map:
+        #         original_col = col_map[col]
+        #         df.insert(insert_at, original_col, df_complete[original_col])
+        #         insert_at += 1
+        #     else:
+        #         st.warning(f"⚠️ Column `{col}` not found in df_complete!")
 
 
         # ------------ CHARTS ------------ #
