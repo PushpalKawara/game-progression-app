@@ -28,8 +28,6 @@ if not st.session_state.logged_in:
                 st.error("Incorrect credentials")
     st.stop()
 
-
-
 st.set_page_config(page_title="GAME PROGRESSION", layout="wide")
 st.title("📊 GAME PROGRESSION Dashboard")
 
@@ -75,15 +73,6 @@ def generate_excel(df_export, retention_fig, drop_fig, drop_comb_fig):
         # Apply cell format with conditional formatting
         for row_num in range(1, len(df_export) + 1):
             for col_num in range(len(df_export.columns)):
-                # value = df_export.iloc[row_num - 1, col_num]
-                # col_name = df_export.columns[col_num]
-
-                # # Check if this is a Drop column with value >= 3
-                # if col_name in ['Game Play Drop', 'Popup Drop', 'Total Level Drop'] and pd.notna(value) and value >= 3:
-                #     worksheet.write(row_num, col_num, value, highlight_format)
-                # else:
-                #     worksheet.write(row_num, col_num, value, cell_format)
-
                 value = df_export.iloc[row_num - 1, col_num]
                 col_name = df_export.columns[col_num]
 
@@ -104,6 +93,7 @@ def generate_excel(df_export, retention_fig, drop_fig, drop_comb_fig):
                     st.warning(f"⚠️ Could not write value at row {row_num} col {col_num}: {e}")
 
 
+
         # Freeze top row
         worksheet.freeze_panes(1, 0)
 
@@ -114,19 +104,19 @@ def generate_excel(df_export, retention_fig, drop_fig, drop_comb_fig):
 
         # Insert Retention Chart
         retention_img = BytesIO()
-        retention_fig.savefig(retention_img, format='png')
+        retention_fig.savefig(retention_img, format='png', dpi=300, bbox_inches='tight')
         retention_img.seek(0)
         worksheet.insert_image('M2', 'retention_chart.png', {'image_data': retention_img})
 
         # Insert total Drop Chart
         drop_img = BytesIO()
-        drop_fig.savefig(drop_img, format='png')
+        drop_fig.savefig(drop_img, format='png', dpi=300, bbox_inches='tight')
         drop_img.seek(0)
         worksheet.insert_image('M37', 'drop_chart.png', {'image_data': drop_img})
 
-        # Insert 'Popup Drop', 'Total Level Drop' Chart
+        # Insert Combo Drop Chart
         drop_comb_img = BytesIO()
-        drop_comb_fig.savefig(drop_comb_img, format='png')
+        drop_comb_fig.savefig(drop_comb_img, format='png', dpi=300, bbox_inches='tight')
         drop_comb_img.seek(0)
         worksheet.insert_image('M67', 'drop_comb_chart.png', {'image_data': drop_comb_img})
 
@@ -175,16 +165,19 @@ def main():
         level_col_complete = next((col for col in df_complete.columns if col in level_columns), None)
         user_col_complete = next((col for col in df_complete.columns if 'USER' in col), None)
 
-        if level_col_complete and user_col_complete :
+        if level_col_complete and user_col_complete:
             df_complete = df_complete[[level_col_complete, user_col_complete]]
             df_complete['LEVEL_CLEAN'] = df_complete[level_col_complete].apply(clean_level)
             df_complete.dropna(inplace=True)
             df_complete['LEVEL_CLEAN'] = df_complete['LEVEL_CLEAN'].astype(int)
             df_complete.sort_values('LEVEL_CLEAN', inplace=True)
             df_complete.rename(columns={user_col_complete: 'Complete Users'}, inplace=True)
-            df_complete=  df_complete['PLAYTIME', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
 
-
+            # # Include gameplay columns if available
+            # optional_cols = ['PLAYTIME', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
+            # for col in optional_cols:
+            #     if col in df_complete.columns:
+            #         df_complete[col] = df_complete[col]
         else:
             st.error("❌ Required columns not found in complete file.")
             return
@@ -202,11 +195,22 @@ def main():
         metric_cols = ['Game Play Drop', 'Popup Drop', 'Total Level Drop', 'Retention %']
         df[metric_cols] = df[metric_cols].round(2)
 
-        # # Include gameplay columns if available
-        # df_complete = ['PLAYTIME', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
-        # for col in df_complete:
-        #     if col in df_complete.columns:
-        #         df[col] = df_complete[col]
+         # Include gameplay columns if available
+        optional_cols = ['PLAYTIME', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
+        for col in optional_cols:
+            if col in df_complete.columns:
+                df[col] = df_complete[col]
+
+        # ------------ CHARTS ------------ #
+        df_100 = df[df['LEVEL_CLEAN'] <= 100]
+
+        # Custom x tick labels
+        xtick_labels = []
+        for val in np.arange(1, 101, 1):
+            if val % 5 == 0:
+                xtick_labels.append(f"$\\bf{{{val}}}$")  # Bold using LaTeX
+            else:
+                xtick_labels.append(str(val))
 
         # ------------ RETENTION CHART ------------ #
         st.subheader("📈 Retention Chart (Levels 1-100)")
@@ -308,14 +312,10 @@ def main():
         # ------------ DOWNLOAD SECTION ------------ #
         st.subheader("⬇️ Download Excel Report")
 
-        # # Prepare export dataframe
-        # df_export = df[['LEVEL_CLEAN', 'Start Users', 'Complete Users',
-        #                 'Game Play Drop', 'Popup Drop', 'Total Level Drop',
-        #                 'Retention %'] + [col for col in df_complete if col in df_complete.columns]]
+        # Prepare export dataframe
         df_export = df[['LEVEL_CLEAN', 'Start Users', 'Complete Users',
                         'Game Play Drop', 'Popup Drop', 'Total Level Drop',
-                        'Retention %',  'PLAYTIME', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']]
-
+                        'Retention %'] + [col for col in optional_cols if col in df.columns]]
         df_export = df_export.rename(columns={'LEVEL_CLEAN': 'Level'})
 
         st.dataframe(df_export)
