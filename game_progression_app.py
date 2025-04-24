@@ -92,8 +92,6 @@ def generate_excel(df_export, retention_fig, drop_fig, drop_comb_fig):
                 except Exception as e:
                     st.warning(f"⚠️ Could not write value at row {row_num} col {col_num}: {e}")
 
-
-
         # Freeze top row
         worksheet.freeze_panes(1, 0)
 
@@ -165,14 +163,20 @@ def main():
         level_col_complete = next((col for col in df_complete.columns if col in level_columns), None)
         user_col_complete = next((col for col in df_complete.columns if 'USER' in col), None)
 
+        # Get all additional columns we want to include
+        additional_columns = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
+        available_additional_cols = [col for col in additional_columns if col in df_complete.columns]
+
         if level_col_complete and user_col_complete:
-            df_complete = df_complete[[level_col_complete, user_col_complete]]
+            # Include all additional columns we found
+            cols_to_keep = [level_col_complete, user_col_complete] + available_additional_cols
+            df_complete = df_complete[cols_to_keep]
+            
             df_complete['LEVEL_CLEAN'] = df_complete[level_col_complete].apply(clean_level)
             df_complete.dropna(inplace=True)
             df_complete['LEVEL_CLEAN'] = df_complete['LEVEL_CLEAN'].astype(int)
             df_complete.sort_values('LEVEL_CLEAN', inplace=True)
             df_complete.rename(columns={user_col_complete: 'Complete Users'}, inplace=True)
-
         else:
             st.error("❌ Required columns not found in complete file.")
             return
@@ -189,35 +193,6 @@ def main():
 
         metric_cols = ['Game Play Drop', 'Popup Drop', 'Total Level Drop', 'Retention %']
         df[metric_cols] = df[metric_cols].round(2)
-
-
-
-        # # Add additional metrics from df_complete
-        # required_columns = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'ATTEMPT_SUM', 'SKIPPED_SUM', 'ATTEMPT_SUM']
-        # missing_cols = [col for col in required_columns if col not in df_complete.columns]
-
-        # if missing_cols:
-        #     st.warning(f"⚠️ The following columns are missing in df_complete: {missing_cols}")
-        # else:
-        #     # Sort and reset index to align with df
-        #     df_complete_sorted = df_complete.sort_values('LEVEL_CLEAN').reset_index(drop=True)
-
-        #     # Insert optional columns into df after 'Retention %'
-        #     insert_at = df.columns.get_loc('Retention %') + 1
-
-        #     for col in required_columns:
-        #         df[col] = df_complete_sorted[col].round(2) if df_complete_sorted[col].dtype != 'O' else df_complete_sorted[col]
-        #         st.write(f"✅ Inserting column `{col}` at position {insert_at}")
-        #         df.insert(insert_at, col, df.pop(col))
-        #         insert_at += 1
-
-        required_columns = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
-        insert_at = df.columns.get_loc('Retention %') + 1  # Find position after 'Retention %'
-
-        for col in required_columns:
-            if col in df_complete.columns:
-                df.insert(insert_at, col, df_complete[col])
-                insert_at += 1  # Adjust position for next inser
 
         # ------------ CHARTS ------------ #
         df_100 = df[df['LEVEL_CLEAN'] <= 100]
@@ -330,12 +305,12 @@ def main():
         # ------------ DOWNLOAD SECTION ------------ #
         st.subheader("⬇️ Download Excel Report")
 
-        # Prepare export dataframe
-        df_export = df[['LEVEL_CLEAN', 'Start Users', 'Complete Users',
-                        'Game Play Drop', 'Popup Drop', 'Total Level Drop',
-                        'Retention %'] + [col for col in required_columns if col in df.columns]]
-
-        df_export = df_export.rename(columns={'LEVEL_CLEAN': 'Level'})
+        # Prepare export dataframe - include all available additional columns
+        export_columns = ['LEVEL_CLEAN', 'Start Users', 'Complete Users',
+                         'Game Play Drop', 'Popup Drop', 'Total Level Drop',
+                         'Retention %'] + available_additional_cols
+        
+        df_export = df[export_columns].rename(columns={'LEVEL_CLEAN': 'Level'})
 
         st.dataframe(df_export)
 
