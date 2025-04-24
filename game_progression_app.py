@@ -164,14 +164,14 @@ def main():
         user_col_complete = next((col for col in df_complete.columns if 'USER' in col), None)
 
         # Get all additional columns we want to include
-        additional_columns = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
+        additional_columns = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM', 'ATTEMPT_SUM']
         available_additional_cols = [col for col in additional_columns if col in df_complete.columns]
 
         if level_col_complete and user_col_complete:
             # Include all additional columns we found
             cols_to_keep = [level_col_complete, user_col_complete] + available_additional_cols
             df_complete = df_complete[cols_to_keep]
-            
+
             df_complete['LEVEL_CLEAN'] = df_complete[level_col_complete].apply(clean_level)
             df_complete.dropna(inplace=True)
             df_complete['LEVEL_CLEAN'] = df_complete['LEVEL_CLEAN'].astype(int)
@@ -186,8 +186,8 @@ def main():
 
         # Calculate metrics
         df['Game Play Drop'] = ((df['Start Users'] - df['Complete Users']) / df['Start Users']) * 100
-        df['Popup Drop'] = ((df['Complete Users'].shift(1) - df['Start Users']) / df['Complete Users'].shift(1)) * 100
-        df['Total Level Drop'] = ((df['Start Users'].shift(1) - df['Complete Users']) / df['Start Users'].shift(1)) * 100
+        df['Popup Drop'] = ((df['Complete Users'] - df['Start Users'].shift(-1)) / df['Complete Users'])* 100
+        df['Total Level Drop'] = ((df['Start Users'] - df['Start Users'].shift(-1)) / df['Start Users']) * 100
         max_start_users = df['Start Users'].max()
         df['Retention %'] = (df['Start Users'] / max_start_users) * 100
 
@@ -309,7 +309,7 @@ def main():
         export_columns = ['LEVEL_CLEAN', 'Start Users', 'Complete Users',
                          'Game Play Drop', 'Popup Drop', 'Total Level Drop',
                          'Retention %'] + available_additional_cols
-        
+
         df_export = df[export_columns].rename(columns={'LEVEL_CLEAN': 'Level'})
 
         st.dataframe(df_export)
