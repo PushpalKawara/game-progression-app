@@ -191,27 +191,20 @@ def main():
         df[metric_cols] = df[metric_cols].round(2)
 
 
-        # optional_cols = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
-        # insert_at = df.columns.get_loc('Retention %') + 1  # Find position after 'Retention %'
-
-        # for col in optional_cols:
-        #     if col in df_complete.columns:
-        #         df.insert(insert_at, col, df_complete[col])
-        #         insert_at += 1  # Adjust position for next insert
         optional_cols = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
         insert_at = df.columns.get_loc('Retention %') + 1  # Find position after 'Retention %'
 
-        # Debugging: Print out the columns in both dataframes
-        print("Columns in df:", df.columns)
-        print("Columns in df_complete:", df_complete.columns)
+        # Show column names in the app for debugging
+        st.write("🔍 Columns in df:", df.columns.tolist())
+        st.write("🔍 Columns in df_complete:", df_complete.columns.tolist())
 
         for col in optional_cols:
             if col in df_complete.columns:
-                print(f"Inserting column {col} at position {insert_at}")
+                st.write(f"✅ Inserting column `{col}` at position {insert_at}")
                 df.insert(insert_at, col, df_complete[col])
-                insert_at += 1  # Adjust position for next insert
+                insert_at += 1
             else:
-                print(f"Column {col} not found in df_complete!")
+                st.warning(f"⚠️ Column `{col}` not found in df_complete!")
 
 
         # ------------ CHARTS ------------ #
