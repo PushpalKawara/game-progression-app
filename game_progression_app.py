@@ -173,11 +173,6 @@ def main():
             df_complete.sort_values('LEVEL_CLEAN', inplace=True)
             df_complete.rename(columns={user_col_complete: 'Complete Users'}, inplace=True)
 
-            # Include gameplay columns if available
-            optional_cols = ['PLAYTIME', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
-            for col in optional_cols:
-                if col in df_complete.columns:
-                    df_complete[col] = df_complete[col]
         else:
             st.error("❌ Required columns not found in complete file.")
             return
@@ -195,11 +190,14 @@ def main():
         metric_cols = ['Game Play Drop', 'Popup Drop', 'Total Level Drop', 'Retention %']
         df[metric_cols] = df[metric_cols].round(2)
 
-        #  # Include gameplay columns if available
-        # optional_cols = ['PLAYTIME', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
-        # for col in optional_cols:
-        #     if col in df_complete.columns:
-        #         df[col] = df_complete[col]
+
+        optional_cols = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
+        insert_at = df.columns.get_loc('Retention %') + 1  # Find position after 'Retention %'
+
+        for col in optional_cols:
+            if col in df_complete.columns:
+                df.insert(insert_at, col, df_complete[col])
+                insert_at += 1  # Adjust position for next insert
 
         # ------------ CHARTS ------------ #
         df_100 = df[df['LEVEL_CLEAN'] <= 100]
