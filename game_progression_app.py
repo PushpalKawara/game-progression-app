@@ -192,24 +192,32 @@ def main():
 
 
 
-        # Add additional metrics from df_complete
-        required_columns = ['PLAYTIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM', 'ATTEMPT_SUM']
-        missing_cols = [col for col in required_columns if col not in df_complete.columns]
+        # # Add additional metrics from df_complete
+        # required_columns = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'ATTEMPT_SUM', 'SKIPPED_SUM', 'ATTEMPT_SUM']
+        # missing_cols = [col for col in required_columns if col not in df_complete.columns]
 
-        if missing_cols:
-            st.warning(f"⚠️ The following columns are missing in df_complete: {missing_cols}")
-        else:
-            # Sort and reset index to align with df
-            df_complete_sorted = df_complete.sort_values('LEVEL_CLEAN').reset_index(drop=True)
+        # if missing_cols:
+        #     st.warning(f"⚠️ The following columns are missing in df_complete: {missing_cols}")
+        # else:
+        #     # Sort and reset index to align with df
+        #     df_complete_sorted = df_complete.sort_values('LEVEL_CLEAN').reset_index(drop=True)
 
-            # Insert optional columns into df after 'Retention %'
-            insert_at = df.columns.get_loc('Retention %') + 1
+        #     # Insert optional columns into df after 'Retention %'
+        #     insert_at = df.columns.get_loc('Retention %') + 1
 
-            for col in required_columns:
-                df[col] = df_complete_sorted[col].round(2) if df_complete_sorted[col].dtype != 'O' else df_complete_sorted[col]
-                st.write(f"✅ Inserting column `{col}` at position {insert_at}")
-                df.insert(insert_at, col, df.pop(col))
-                insert_at += 1
+        #     for col in required_columns:
+        #         df[col] = df_complete_sorted[col].round(2) if df_complete_sorted[col].dtype != 'O' else df_complete_sorted[col]
+        #         st.write(f"✅ Inserting column `{col}` at position {insert_at}")
+        #         df.insert(insert_at, col, df.pop(col))
+        #         insert_at += 1
+
+        required_columns = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM']
+        insert_at = df.columns.get_loc('Retention %') + 1  # Find position after 'Retention %'
+
+        for col in required_columns:
+            if col in df_complete.columns:
+                df.insert(insert_at, col, df_complete[col])
+                insert_at += 1  # Adjust position for next inser
 
         # ------------ CHARTS ------------ #
         df_100 = df[df['LEVEL_CLEAN'] <= 100]
