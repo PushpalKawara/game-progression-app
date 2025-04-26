@@ -6,6 +6,7 @@ from io import BytesIO
 import datetime
 import re
 
+
 # Dummy username & password
 USERNAME = "Pushpal@2025"
 PASSWORD = "Pushpal@202512345"
@@ -27,6 +28,10 @@ if not st.session_state.logged_in:
             else:
                 st.error("Incorrect credentials")
     st.stop()
+
+st.set_page_config(page_title="GAME PROGRESSION", layout="wide")
+st.title("📊 GAME PROGRESSION Dashboard")
+
 
 st.set_page_config(page_title="GAME PROGRESSION", layout="wide")
 st.title("📊 GAME PROGRESSION Dashboard")
@@ -164,7 +169,7 @@ def main():
         user_col_complete = next((col for col in df_complete.columns if 'USER' in col), None)
 
         # Get all additional columns we want to include
-        additional_columns = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM', 'ATTEMPTS_SUM']
+        additional_columns = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM', 'ATTEMPT_SUM']
         available_additional_cols = [col for col in additional_columns if col in df_complete.columns]
         df_complete[available_additional_cols] = df_complete[available_additional_cols].round(2)
 
@@ -240,7 +245,7 @@ def main():
 
         # Annotate data points below x-axis
         for x, y in zip(df_100['LEVEL_CLEAN'], df_100['Retention %']):
-            ax.text(x, -2, f"{int(y)}", ha='center', va='top', fontsize=7)
+            ax.text(x, -5, f"{int(y)}", ha='center', va='top', fontsize=7)
 
         ax.legend(loc='lower left', fontsize=8)
         plt.tight_layout(rect=[0, 0.03, 1, 0.97])
