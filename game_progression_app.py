@@ -6,7 +6,6 @@ from io import BytesIO
 import datetime
 import re
 
-
 # Dummy username & password
 USERNAME = "Pushpal@2025"
 PASSWORD = "Pushpal@202512345"
@@ -28,10 +27,6 @@ if not st.session_state.logged_in:
             else:
                 st.error("Incorrect credentials")
     st.stop()
-
-st.set_page_config(page_title="GAME PROGRESSION", layout="wide")
-st.title("📊 GAME PROGRESSION Dashboard")
-
 
 st.set_page_config(page_title="GAME PROGRESSION", layout="wide")
 st.title("📊 GAME PROGRESSION Dashboard")
