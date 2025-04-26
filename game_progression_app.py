@@ -240,7 +240,7 @@ def main():
 
         # Annotate data points below x-axis
         for x, y in zip(df_100['LEVEL_CLEAN'], df_100['Retention %']):
-            ax.text(x, -5, f"{int(y)}", ha='center', va='top', fontsize=7)
+            ax.text(x, -2, f"{int(y)}", ha='center', va='top', fontsize=7)
 
         ax.legend(loc='lower left', fontsize=8)
         plt.tight_layout(rect=[0, 0.03, 1, 0.97])
