@@ -191,8 +191,8 @@ def main():
         df['Total Level Drop'] = ((df['Start Users'] - df['Start Users'].shift(-1)) / df['Start Users']) * 100
         # Choose max_users based on condition between Level 1 and Level 2
 
-        level1_users = df[df['LEVEL_CLEAN'] == 1]['USERS'].values[0] if 1 in df['LEVEL_CLEAN'].values else 0
-        level2_users = df[df['LEVEL_CLEAN'] == 2]['USERS'].values[0] if 2 in df['LEVEL_CLEAN'].values else 0
+        level1_users = df_start[df_start['LEVEL_CLEAN'] == 1]['USERS'].values[0] if 1 in df_start['LEVEL_CLEAN'].values else 0
+        level2_users = df_start[df_start['LEVEL_CLEAN'] == 2]['USERS'].values[0] if 2 in df_start['LEVEL_CLEAN'].values else 0
         max_start_users = level2_users if level2_users > level1_users else level1_users
 
         df['Retention %'] = (df['Start Users'] / max_start_users) * 100
