@@ -333,3 +333,6 @@ def main():
         )
 
 # ... [Rest of the code remains unchanged] ...
+
+if __name__ == "__main__":
+    main()
