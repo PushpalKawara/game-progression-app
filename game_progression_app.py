@@ -6,7 +6,7 @@ from io import BytesIO
 import datetime
 import re
 
-# Dummy username & password
+# ... [Previous code remains unchanged until the file upload section] ...
 USERNAME = "Pushpal@2025"
 PASSWORD = "Pushpal@202512345"
 
@@ -185,20 +185,19 @@ def main():
         # ------------ MERGE AND CALCULATE METRICS ------------- #
         df = pd.merge(df_start, df_complete, on='LEVEL_CLEAN', how='outer').sort_values('LEVEL_CLEAN')
 
+        # Get Max User Install from user input
+        max_user_install = st.number_input("👥 Max User Install", min_value=1, value=1)
+
         # Calculate metrics
         df['Game Play Drop'] = ((df['Start Users'] - df['Complete Users']) / df['Start Users']) * 100
-        df['Popup Drop'] = ((df['Complete Users'] - df['Start Users'].shift(-1)) / df['Complete Users'])* 100
+        df['Popup Drop'] = ((df['Complete Users'] - df['Start Users'].shift(-1)) / df['Complete Users']) * 100
         df['Total Level Drop'] = ((df['Start Users'] - df['Start Users'].shift(-1)) / df['Start Users']) * 100
-        # Choose max_users based on condition between Level 1 and Level 2
-
-        level1_users = df_start[df_start['LEVEL_CLEAN'] == 1]['Start Users'].values[0] if 1 in df_start['LEVEL_CLEAN'].values else 0
-        level2_users = df_start[df_start['LEVEL_CLEAN'] == 2]['Start Users'].values[0] if 2 in df_start['LEVEL_CLEAN'].values else 0
-        max_start_users = level2_users if level2_users > level1_users else level1_users
-
-        df['Retention %'] = (df['Start Users'] / max_start_users) * 100
+        df['Retention %'] = (df['Start Users'] / max_user_install) * 100  # Use user-provided max install
 
         metric_cols = ['Game Play Drop', 'Popup Drop', 'Total Level Drop', 'Retention %']
         df[metric_cols] = df[metric_cols].round(2)
+
+        # ... [Rest of the code remains unchanged until the export section] ...
 
         # ------------ CHARTS ------------ #
         df_100 = df[df['LEVEL_CLEAN'] <= 100]
@@ -309,15 +308,17 @@ def main():
         plt.tight_layout()
         st.pyplot(drop_comb_fig)
 
+
         # ------------ DOWNLOAD SECTION ------------ #
         st.subheader("⬇️ Download Excel Report")
 
-        # Prepare export dataframe - include all available additional columns
+        # Prepare export dataframe - include all available additional columns and user install
         export_columns = ['LEVEL_CLEAN', 'Start Users', 'Complete Users',
                          'Game Play Drop', 'Popup Drop', 'Total Level Drop',
                          'Retention %'] + available_additional_cols
 
         df_export = df[export_columns].rename(columns={'LEVEL_CLEAN': 'Level'})
+        df_export['User Install'] = max_user_install  # Add user install column
 
         st.dataframe(df_export)
 
@@ -331,5 +332,4 @@ def main():
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-if __name__ == "__main__":
-    main()
+# ... [Rest of the code remains unchanged] ...
