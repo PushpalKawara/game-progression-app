@@ -195,18 +195,18 @@ def main():
         df['Total Level Drop'] = df['Game Play Drop'] + df['Popup Drop']
 
          # Retention based on fixed highest value of Level 1 or 2 Start Users
-       df['Retention %'] = (df['Start Users'] / base_users) * 100 
+        df['Retention %'] = (df['Start Users'] / base_users) * 100 
 
        # Conditionally calculate 'Attempt' if 'RETRY_COUNT_SUM' exists
-       if 'RETRY_COUNT_SUM' in df.columns:
+        if 'RETRY_COUNT_SUM' in df.columns:
           df['Attempt'] = df['RETRY_COUNT_SUM'] / df['Complete Users']
 
        # Round metrics
-       metric_cols = ['Game Play Drop', 'Popup Drop', 'Total Level Drop', 'Retention %']
-       if 'Attempt' in df.columns:
+        metric_cols = ['Game Play Drop', 'Popup Drop', 'Total Level Drop', 'Retention %']
+        if 'Attempt' in df.columns:
            metric_cols.append('Attempt')
 
-      df[metric_cols] = df[metric_cols].round(2)
+        df[metric_cols] = df[metric_cols].round(2)
 
 
         
