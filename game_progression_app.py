@@ -190,12 +190,12 @@ def main():
         base_users = df[df['LEVEL_CLEAN'].isin([1, 2])]['Start Users'].max()
 
         # Calculate metrics
-        df['Game Play Drop'] = (((df['Start Users'] - df['Complete Users']) / df['Start Users']) * 100)
-        df['Popup Drop'] =( ((df['Complete Users'] - df['Start Users'].shift(-1)) / df['Complete Users']) * 100)
-        df['Total Level Drop'] = (df['Game Play Drop'] + df['Popup Drop'])
+        df['Game Play Drop'] = ((df['Start Users'] - df['Complete Users']) / df['Start Users']) * 100
+        df['Popup Drop'] = ((df['Complete Users'] - df['Start Users'].shift(-1)) / df['Complete Users']) * 100
+        df['Total Level Drop'] = df['Game Play Drop'] + df['Popup Drop']
 
          # Retention based on fixed highest value of Level 1 or 2 Start Users
-       df['Retention %'] = ( (df['Start Users'] / base_users) * 100 )
+       df['Retention %'] = (df['Start Users'] / base_users) * 100 
 
        # Conditionally calculate 'Attempt' if 'RETRY_COUNT_SUM' exists
        if 'RETRY_COUNT_SUM' in df.columns:
