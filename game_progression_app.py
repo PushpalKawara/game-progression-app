@@ -164,7 +164,7 @@ def main():
         user_col_complete = next((col for col in df_complete.columns if 'USER' in col), None)
 
         # Get all additional columns we want to include
-        additional_columns = ['PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM', 'ATTEMPT_SUM','PREFAB_NAME']
+        additional_columns = ['PLAY_TIME_AVG','PLAYTIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM', 'ATTEMPT_SUM','PREFAB_NAME']
         available_additional_cols = [col for col in additional_columns if col in df_complete.columns]
         df_complete[available_additional_cols] = df_complete[available_additional_cols].round(2)
 
@@ -183,17 +183,33 @@ def main():
             return
 
         # ------------ MERGE AND CALCULATE METRICS ------------- #
+
         df = pd.merge(df_start, df_complete, on='LEVEL_CLEAN', how='outer').sort_values('LEVEL_CLEAN')
 
-        # Calculate metrics
-        df['Game Play Drop'] = ((df['Start Users'] - df['Complete Users']) / df['Start Users']) * 100
-        df['Popup Drop'] = ((df['Complete Users'] - df['Start Users'].shift(-1)) / df['Complete Users'])* 100
-        df['Total Level Drop'] = ((df['Start Users'] - df['Start Users'].shift(-1)) / df['Start Users']) * 100
-        max_start_users = df['Start Users'].max()
-        df['Retention %'] = (df['Start Users'] / max_start_users) * 100
+        # Find the higher of Level 1 or Level 2 Start Users for Retention base
+        base_users = df[df['LEVEL_CLEAN'].isin([1, 2])]['Start Users'].max()
 
-        metric_cols = ['Game Play Drop', 'Popup Drop', 'Total Level Drop', 'Retention %']
-        df[metric_cols] = df[metric_cols].round(2)
+        # Calculate metrics
+        df['Game Play Drop'] = (((df['Start Users'] - df['Complete Users']) / df['Start Users']) * 100)
+        df['Popup Drop'] =( ((df['Complete Users'] - df['Start Users'].shift(-1)) / df['Complete Users']) * 100)
+        df['Total Level Drop'] = (df['Game Play Drop'] + df['Popup Drop'])
+
+         # Retention based on fixed highest value of Level 1 or 2 Start Users
+       df['Retention %'] = ( (df['Start Users'] / base_users) * 100 )
+
+       # Conditionally calculate 'Attempt' if 'RETRY_COUNT_SUM' exists
+       if 'RETRY_COUNT_SUM' in df.columns:
+          df['Attempt'] = df['RETRY_COUNT_SUM'] / df['Complete Users']
+
+       # Round metrics
+       metric_cols = ['Game Play Drop', 'Popup Drop', 'Total Level Drop', 'Retention %']
+       if 'Attempt' in df.columns:
+           metric_cols.append('Attempt')
+
+      df[metric_cols] = df[metric_cols].round(2)
+
+
+        
 
         # ------------ CHARTS ------------ #
         df_100 = df[df['LEVEL_CLEAN'] <= 100]
