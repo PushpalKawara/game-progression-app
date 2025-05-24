@@ -32,77 +32,41 @@ st.set_page_config(page_title="GAME PROGRESSION", layout="wide")
 st.title("📊 GAME PROGRESSION Dashboard")
 
 
-# -------------------- FUNCTION TO EXPORT EXCEL -------------------- #
+
+
 def generate_excel(df_export, retention_fig, drop_fig, drop_comb_fig):
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        # Step 1: Remove duplicate levels from df_export
         df_export = df_export.drop_duplicates(subset='Level', keep='first').reset_index(drop=True)
-
-        # Write dataframe to Excel
         df_export.to_excel(writer, sheet_name='Summary', index=False)
         workbook = writer.book
         worksheet = writer.sheets['Summary']
 
-        # Header format
-        header_format = workbook.add_format({
-            'bold': True,
-            'align': 'center',
-            'valign': 'vcenter',
-            'bg_color': '#D9E1F2',
-            'border': 1
-        })
+        # Header and cell formatting
+        header_format = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'bg_color': '#D9E1F2', 'border': 1})
+        cell_format = workbook.add_format({'align': 'center', 'valign': 'vcenter'})
 
-        # Cell format
-        cell_format = workbook.add_format({
-            'align': 'center',
-            'valign': 'vcenter'
-        })
-
-        # Apply formats to the worksheet
         for col_num, value in enumerate(df_export.columns):
             worksheet.write(0, col_num, value, header_format)
 
-        # Apply cell format with conditional formatting
         for row_num in range(1, len(df_export) + 1):
             for col_num in range(len(df_export.columns)):
                 value = df_export.iloc[row_num - 1, col_num]
                 col_name = df_export.columns[col_num]
 
-                # Convert all numpy types to native Python types
                 if isinstance(value, (np.generic, np.bool_)):
                     value = value.item()
-
-                # Handle NaNs safely
                 if pd.isna(value):
                     value = ""
 
                 try:
                     if col_name in ['Game Play Drop', 'Popup Drop', 'Total Level Drop'] and isinstance(value, (int, float)):
                         if value >= 10:
-                            format_to_apply = workbook.add_format({
-                                'bg_color': '#8B0000',  # Dark red
-                                'font_color': 'white',
-                                'align': 'center',
-                                'valign': 'vcenter',
-                                'bold': True
-                            })
+                            format_to_apply = workbook.add_format({'bg_color': '#8B0000', 'font_color': 'white', 'align': 'center', 'valign': 'vcenter', 'bold': True})
                         elif value >= 5:
-                            format_to_apply = workbook.add_format({
-                                'bg_color': '#CD5C5C',  # Medium red
-                                'font_color': 'white',
-                                'align': 'center',
-                                'valign': 'vcenter',
-                                'bold': True
-                            })
+                            format_to_apply = workbook.add_format({'bg_color': '#CD5C5C', 'font_color': 'white', 'align': 'center', 'valign': 'vcenter', 'bold': True})
                         elif value >= 3:
-                            format_to_apply = workbook.add_format({
-                                'bg_color': '#FFC0CB',  # Light red
-                                'font_color': 'black',
-                                'align': 'center',
-                                'valign': 'vcenter',
-                                'bold': True
-                            })
+                            format_to_apply = workbook.add_format({'bg_color': '#FFC0CB', 'font_color': 'black', 'align': 'center', 'valign': 'vcenter', 'bold': True})
                         else:
                             format_to_apply = cell_format
                         worksheet.write(row_num, col_num, value, format_to_apply)
@@ -111,27 +75,23 @@ def generate_excel(df_export, retention_fig, drop_fig, drop_comb_fig):
                 except Exception as e:
                     st.warning(f"⚠️ Could not write value at row {row_num} col {col_num}: {e}")
 
-        # Freeze top row
         worksheet.freeze_panes(1, 0)
 
-        # Set column widths dynamically
         for i, col in enumerate(df_export.columns):
             column_len = max(df_export[col].astype(str).map(len).max(), len(col)) + 2
             worksheet.set_column(i, i, column_len)
 
-        # Insert Retention Chart
+        # Insert charts
         retention_img = BytesIO()
         retention_fig.savefig(retention_img, format='png', dpi=300, bbox_inches='tight')
         retention_img.seek(0)
         worksheet.insert_image('M2', 'retention_chart.png', {'image_data': retention_img})
 
-        # Insert total Drop Chart
         drop_img = BytesIO()
         drop_fig.savefig(drop_img, format='png', dpi=300, bbox_inches='tight')
         drop_img.seek(0)
         worksheet.insert_image('M37', 'drop_chart.png', {'image_data': drop_img})
 
-        # Insert Combo Drop Chart
         drop_comb_img = BytesIO()
         drop_comb_fig.savefig(drop_comb_img, format='png', dpi=300, bbox_inches='tight')
         drop_comb_img.seek(0)
@@ -139,6 +99,114 @@ def generate_excel(df_export, retention_fig, drop_fig, drop_comb_fig):
 
     output.seek(0)
     return output
+
+# # -------------------- FUNCTION TO EXPORT EXCEL -------------------- #
+# def generate_excel(df_export, retention_fig, drop_fig, drop_comb_fig):
+#     output = BytesIO()
+#     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+#         # Step 1: Remove duplicate levels from df_export
+#         df_export = df_export.drop_duplicates(subset='Level', keep='first').reset_index(drop=True)
+
+#         # Write dataframe to Excel
+#         df_export.to_excel(writer, sheet_name='Summary', index=False)
+#         workbook = writer.book
+#         worksheet = writer.sheets['Summary']
+
+#         # Header format
+#         header_format = workbook.add_format({
+#             'bold': True,
+#             'align': 'center',
+#             'valign': 'vcenter',
+#             'bg_color': '#D9E1F2',
+#             'border': 1
+#         })
+
+#         # Cell format
+#         cell_format = workbook.add_format({
+#             'align': 'center',
+#             'valign': 'vcenter'
+#         })
+
+#         # Apply formats to the worksheet
+#         for col_num, value in enumerate(df_export.columns):
+#             worksheet.write(0, col_num, value, header_format)
+
+#         # Apply cell format with conditional formatting
+#         for row_num in range(1, len(df_export) + 1):
+#             for col_num in range(len(df_export.columns)):
+#                 value = df_export.iloc[row_num - 1, col_num]
+#                 col_name = df_export.columns[col_num]
+
+#                 # Convert all numpy types to native Python types
+#                 if isinstance(value, (np.generic, np.bool_)):
+#                     value = value.item()
+
+#                 # Handle NaNs safely
+#                 if pd.isna(value):
+#                     value = ""
+
+#                 try:
+#                     if col_name in ['Game Play Drop', 'Popup Drop', 'Total Level Drop'] and isinstance(value, (int, float)):
+#                         if value >= 10:
+#                             format_to_apply = workbook.add_format({
+#                                 'bg_color': '#8B0000',  # Dark red
+#                                 'font_color': 'white',
+#                                 'align': 'center',
+#                                 'valign': 'vcenter',
+#                                 'bold': True
+#                             })
+#                         elif value >= 5:
+#                             format_to_apply = workbook.add_format({
+#                                 'bg_color': '#CD5C5C',  # Medium red
+#                                 'font_color': 'white',
+#                                 'align': 'center',
+#                                 'valign': 'vcenter',
+#                                 'bold': True
+#                             })
+#                         elif value >= 3:
+#                             format_to_apply = workbook.add_format({
+#                                 'bg_color': '#FFC0CB',  # Light red
+#                                 'font_color': 'black',
+#                                 'align': 'center',
+#                                 'valign': 'vcenter',
+#                                 'bold': True
+#                             })
+#                         else:
+#                             format_to_apply = cell_format
+#                         worksheet.write(row_num, col_num, value, format_to_apply)
+#                     else:
+#                         worksheet.write(row_num, col_num, value, cell_format)
+#                 except Exception as e:
+#                     st.warning(f"⚠️ Could not write value at row {row_num} col {col_num}: {e}")
+
+#         # Freeze top row
+#         worksheet.freeze_panes(1, 0)
+
+#         # Set column widths dynamically
+#         for i, col in enumerate(df_export.columns):
+#             column_len = max(df_export[col].astype(str).map(len).max(), len(col)) + 2
+#             worksheet.set_column(i, i, column_len)
+
+#         # Insert Retention Chart
+#         retention_img = BytesIO()
+#         retention_fig.savefig(retention_img, format='png', dpi=300, bbox_inches='tight')
+#         retention_img.seek(0)
+#         worksheet.insert_image('M2', 'retention_chart.png', {'image_data': retention_img})
+
+#         # Insert total Drop Chart
+#         drop_img = BytesIO()
+#         drop_fig.savefig(drop_img, format='png', dpi=300, bbox_inches='tight')
+#         drop_img.seek(0)
+#         worksheet.insert_image('M37', 'drop_chart.png', {'image_data': drop_img})
+
+#         # Insert Combo Drop Chart
+#         drop_comb_img = BytesIO()
+#         drop_comb_fig.savefig(drop_comb_img, format='png', dpi=300, bbox_inches='tight')
+#         drop_comb_img.seek(0)
+#         worksheet.insert_image('M67', 'drop_comb_chart.png', {'image_data': drop_comb_img})
+
+#     output.seek(0)
+#     return output
 
 
 
