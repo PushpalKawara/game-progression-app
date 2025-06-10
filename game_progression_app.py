@@ -117,7 +117,7 @@ def main():
 
         # ------------ CLEAN START FILE ------------- #
         df_start.columns = df_start.columns.str.strip().str.upper()
-        level_columns = ['LEVEL', 'LEVELPLAYED', 'TOTALLEVELPLAYED', 'TOTALLEVELSPLAYED', 'LEVEL_NUMBER' ]
+        level_columns = ['LEVEL', 'LEVELPLAYED', 'TOTALLEVELPLAYED', 'TOTALLEVELSPLAYED', 'LEVEL_NUMBER' , 'TOTAL_LEVEL' ]
         level_col_start = next((col for col in df_start.columns if col in level_columns), None)
         user_col_start = next((col for col in df_start.columns if 'USER' in col), None)
 
