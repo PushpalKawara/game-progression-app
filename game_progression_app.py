@@ -145,7 +145,7 @@ def main():
         user_col_complete = next((col for col in df_complete.columns if 'USER' in col), None)
 
         # Get all additional columns we want to include
-        additional_columns = ['PLAYTIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM', 'ATTEMPT_SUM','PREFAB_NAME']
+        additional_columns = ['PLAYTIME_AVG','PLAY_TIME_AVG', 'HINT_USED_SUM', 'RETRY_COUNT_SUM', 'SKIPPED_SUM', 'ATTEMPT_SUM','PREFAB_NAME']
         available_additional_cols = [col for col in additional_columns if col in df_complete.columns]
         df_complete[available_additional_cols] = df_complete[available_additional_cols].round(2)
 
